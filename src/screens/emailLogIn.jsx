@@ -1,12 +1,26 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { auth } from '../config/firebaseConfig';
-import { signInWithEmailAndPassword } from "firebase/auth"; // Import the function correctly
-
+import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 
 const EmailLogIn = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false); // ✅ Prevent multiple sign-ins
+  const [checkingAuth, setCheckingAuth] = useState(true); // ✅ Prevents premature navigation
+
+  // ✅ Ensure Auth State is Loaded Before Navigating
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log("User is logged in:", user.email);
+        navigation.reset({ index: 0, routes: [{ name: 'Home' }] }); // ✅ Ensures clean navigation
+      }
+      setCheckingAuth(false);
+    });
+
+    return unsubscribe;
+  }, []);
 
   const handleLogIn = async () => {
     if (!email || !password) {
@@ -14,19 +28,31 @@ const EmailLogIn = ({ navigation }) => {
       return;
     }
 
+    setLoading(true); // Prevent multiple clicks
+
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigation.navigate('Home');
+      console.log("Sign-in successful:", email);
+      // ✅ Navigation is handled by `onAuthStateChanged`
     } catch (error) {
       Alert.alert('Error', error.message);
+      setLoading(false);
     }
   };
+
+  if (checkingAuth) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#6200EE" />
+        <Text>Checking authentication...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Log In</Text>
 
-      {/* Email Input */}
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -37,7 +63,6 @@ const EmailLogIn = ({ navigation }) => {
         onChangeText={setEmail}
       />
 
-      {/* Password Input */}
       <TextInput
         style={styles.input}
         placeholder="Password"
@@ -47,23 +72,21 @@ const EmailLogIn = ({ navigation }) => {
         onChangeText={setPassword}
       />
 
-      {/* Log In Button */}
-      <TouchableOpacity style={styles.button} onPress={handleLogIn}>
-        <Text style={styles.buttonText}>Log In</Text>
+      <TouchableOpacity style={styles.button} onPress={handleLogIn} disabled={loading}>
+        <Text style={styles.buttonText}>{loading ? "Signing In..." : "Log In"}</Text>
       </TouchableOpacity>
 
-      {/* Sign Up Redirect */}
       <TouchableOpacity onPress={() => navigation.navigate('Email Sign Up')}>
         <Text style={styles.link}>
           Don’t have an account? <Text style={styles.linkHighlight}>Sign Up</Text>
         </Text>
       </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate('Change Password')}>
-                <Text style={styles.link}>
-                  Forgot Password? <Text style={styles.linkHighlight}>Change Password</Text>
-                </Text>
-        </TouchableOpacity>
+      <TouchableOpacity onPress={() => navigation.navigate('Change Password')}>
+        <Text style={styles.link}>
+          Forgot Password? <Text style={styles.linkHighlight}>Change Password</Text>
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 };

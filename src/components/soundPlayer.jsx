@@ -48,3 +48,4 @@ const SoundPlayer = ({ soundFile }) => {
 };
 
 export default SoundPlayer;
+

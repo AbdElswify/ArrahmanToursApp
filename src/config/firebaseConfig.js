@@ -1,7 +1,11 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, initializeAuth, getReactNativePersistence } from "firebase/auth";
-import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
-import { getFirestore, collection, doc } from "firebase/firestore";
+import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
+import { getDocs, where, addDoc, query, getFirestore, collection, doc, FieldValue, getDoc, setDoc, updateDoc, onSnapshot, arrayUnion, arrayRemove, serverTimestamp,orderBy} from "firebase/firestore";
+import messaging from '@react-native-firebase/messaging';
+import 'react-native-get-random-values';
+import { v4 as uuidv4 } from 'uuid';
+import { ScrollView } from 'react-native';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -18,10 +22,9 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 // Initialize Firebase Auth with AsyncStorage persistence
 const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(ReactNativeAsyncStorage), // Use AsyncStorage for persistence
+  persistence: getReactNativePersistence(ReactNativeAsyncStorage),
 });
 
 const db = getFirestore(app);
 
-export { auth, db, collection, doc }; // Export Firestore functions as well
-
+export { ScrollView, uuidv4, getDocs, where,addDoc, query, messaging, auth, db, collection, doc, getDoc, setDoc, updateDoc, onSnapshot, arrayUnion, arrayRemove, serverTimestamp,orderBy};
